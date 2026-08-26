@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: upi-offline-mesh
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: CORS_ALLOWED_ORIGINS
+        value: https://upi-mesh.vercel.app,http://localhost:3000
+      - key: SPRING_PROFILES_ACTIVE
+        value: production
+      - key: SERVER_PORT
+        value: "8080"

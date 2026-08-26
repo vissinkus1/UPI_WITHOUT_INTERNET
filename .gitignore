@@ -6,3 +6,7 @@ target/
 *.iml
 .vscode/
 .DS_Store
+node_modules/
+.next/
+frontend/node_modules/
+frontend/.next/
