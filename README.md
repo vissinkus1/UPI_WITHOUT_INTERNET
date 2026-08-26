@@ -1,23 +1,35 @@
-# UPI Offline Mesh — Demo
+# 📡 UPI Offline Mesh — Live Demo & Architecture
 
-A Spring Boot backend that demonstrates **offline UPI payments routed through a Bluetooth-style mesh network**. You're in a basement with zero connectivity. You send your friend ₹500. Your phone encrypts the payment, broadcasts it to nearby phones, and the packet hops device-to-device until *some* phone walks outside, gets 4G, and silently uploads it to this backend. The backend decrypts, deduplicates, and settles.
+> **Offline UPI payments routed through an encrypted Bluetooth-style mesh network.** Send money in a basement with zero connectivity. Encrypted payment packets hop device-to-device until a bridge node walks outside, connects to 4G, and securely settles with the backend.
 
-This repo is the **server side** of that system, plus a software simulator of the mesh so you can demo the whole flow on a single laptop without any real Bluetooth hardware.
+---
+
+## 🌐 Live Deployments
+
+| Component | Platform | URL | Status |
+| :--- | :--- | :--- | :--- |
+| **Frontend Application** | Vercel | **[https://upi-without-internet-ten.vercel.app/](https://upi-without-internet-ten.vercel.app/)** | 🟢 Live |
+| **Interactive Dashboard** | Vercel | **[https://upi-without-internet-ten.vercel.app/dashboard](https://upi-without-internet-ten.vercel.app/dashboard)** | 🟢 Live |
+| **Architecture & Explainer** | Vercel | **[https://upi-without-internet-ten.vercel.app/how-it-works](https://upi-without-internet-ten.vercel.app/how-it-works)** | 🟢 Live |
+| **API Explorer** | Vercel | **[https://upi-without-internet-ten.vercel.app/api-explorer](https://upi-without-internet-ten.vercel.app/api-explorer)** | 🟢 Live |
+| **Backend Service** | Render | **`https://upi-offline-mesh-ry8k.onrender.com`** | 🟢 Live |
 
 ---
 
 ## Table of Contents
 
-1. [What this demo proves](#what-this-demo-proves)
-2. [How to run it](#how-to-run-it)
-3. [The demo flow (step by step)](#the-demo-flow-step-by-step)
-4. [Architecture](#architecture)
-5. [The three hard problems and how they're solved](#the-three-hard-problems-and-how-theyre-solved)
-6. [File-by-file walkthrough](#file-by-file-walkthrough)
-7. [API reference](#api-reference)
-8. [Tests](#tests)
-9. [What's NOT real (and what would change for production)](#whats-not-real-and-what-would-change-for-production)
-10. [Honest limitations of the concept](#honest-limitations-of-the-concept)
+1. [Live Deployments](#-live-deployments)
+2. [What this demo proves](#what-this-demo-proves)
+3. [Architecture](#architecture)
+4. [Tech Stack](#tech-stack)
+5. [How to run locally](#how-to-run-locally)
+6. [The demo flow (step by step)](#the-demo-flow-step-by-step)
+7. [The three hard problems and how they're solved](#the-three-hard-problems-and-how-theyre-solved)
+8. [File-by-file walkthrough](#file-by-file-walkthrough)
+9. [API reference](#api-reference)
+10. [Tests](#tests)
+11. [What's NOT real (and what would change for production)](#whats-not-real-and-what-would-change-for-production)
+12. [Honest limitations of the concept](#honest-limitations-of-the-concept)
 
 ---
 
@@ -29,16 +41,40 @@ The system shows three things working end to end:
 2. **Even if the same payment reaches the backend simultaneously through multiple bridge nodes, it settles exactly once.** (Idempotency via atomic compare-and-set on the ciphertext hash.)
 3. **A tampered or replayed packet is rejected** before it touches the ledger.
 
-You'll see all three in the dashboard.
+You'll see all three in the live dashboard.
 
 ---
 
-## How to run it
+## Tech Stack
 
-### Prerequisites
+- **Frontend**: Next.js 14+ (App Router), Tailwind CSS, Vanilla CSS Glassmorphism Design Tokens, HTML5 Canvas animations, Vercel Edge.
+- **Backend**: Java 17, Spring Boot 3.3, Spring Data JPA, H2 In-Memory DB, Tomcat Embedded Server.
+- **Cryptography**: RSA-2048 (OAEP padding with SHA-256), AES-256-GCM authenticated payload encryption.
+- **Deployment**: Render (Docker-based Spring Boot backend), Vercel (Next.js frontend).
 
-- **JDK 17 or newer** installed and on PATH (or `JAVA_HOME` set). Check with `java -version`.
-- That's it. No database, no Redis, no Maven (the wrapper handles it). Just Java.
+---
+
+## How to run locally
+
+### 1. Start the Backend (Spring Boot)
+
+```bash
+# Windows
+.\mvnw.cmd spring-boot:run
+
+# Mac/Linux
+./mvnw spring-boot:run
+```
+Backend will start on `http://localhost:8080`.
+
+### 2. Start the Frontend (Next.js)
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+Open **`http://localhost:3000`** in your browser.
 
 ### Run on Windows
 
