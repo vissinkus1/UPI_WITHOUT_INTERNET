@@ -1,62 +1,72 @@
 'use client';
 
 export default function StatsOverview({ meshState, accounts, transactions }) {
-  const totalPackets = meshState?.devices?.reduce((s, d) => s + d.packetCount, 0) || 0;
+  const totalPackets = meshState?.devices?.reduce((s, d) => s + (d.packetCount || 0), 0) || 0;
   const bridgeDevices = meshState?.devices?.filter(d => d.hasInternet)?.length || 0;
-  const settledCount = transactions?.filter(t => t.status === 'SETTLED')?.length || 0;
-  const totalVolume = transactions
-    ?.filter(t => t.status === 'SETTLED')
-    ?.reduce((s, t) => s + parseFloat(t.amount), 0) || 0;
+  const settledList = transactions?.filter(t => t.status === 'SETTLED') || [];
+  const settledCount = settledList.length;
+  const duplicateDropped = transactions?.filter(t => t.status === 'DUPLICATE_DROPPED')?.length || 0;
+  const totalVolume = settledList.reduce((s, t) => s + parseFloat(t.amount || 0), 0);
+  const cacheSize = meshState?.idempotencyCacheSize ?? settledCount;
 
   const stats = [
     {
-      label: 'Packets in Mesh',
-      value: totalPackets,
+      label: 'Packets in Mesh Buffer',
+      value: `${totalPackets} pkts`,
+      subtext: totalPackets > 0 ? 'Travelling hop-to-hop' : 'All buffers flushed',
       icon: '📦',
-      color: 'from-blue-500 to-indigo-600',
-      glow: 'rgba(59, 130, 246, 0.2)',
+      accent: '#2997ff',
     },
     {
-      label: 'Bridge Nodes',
-      value: bridgeDevices,
+      label: '4G Bridge Gateways',
+      value: `${bridgeDevices} Online`,
+      subtext: 'Outdoors with cellular data',
       icon: '📡',
-      color: 'from-emerald-500 to-teal-600',
-      glow: 'rgba(16, 185, 129, 0.2)',
+      accent: '#30d158',
     },
     {
-      label: 'Settled Txns',
+      label: 'Settled Transactions',
       value: settledCount,
-      icon: '✅',
-      color: 'from-purple-500 to-violet-600',
-      glow: 'rgba(139, 92, 246, 0.2)',
+      subtext: duplicateDropped > 0 ? `${duplicateDropped} dups dropped` : 'Zero collision',
+      icon: '✓',
+      accent: '#bf5af2',
     },
     {
-      label: 'Total Volume',
-      value: `₹${totalVolume.toLocaleString('en-IN')}`,
-      icon: '💰',
-      color: 'from-amber-500 to-orange-600',
-      glow: 'rgba(245, 158, 11, 0.2)',
+      label: 'Volume Settled',
+      value: `₹${totalVolume.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`,
+      subtext: `Idempotency claims: ${cacheSize}`,
+      icon: '₹',
+      accent: '#ff9f0a',
     },
   ];
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
       {stats.map((stat, i) => (
         <div
           key={i}
-          className="glass-card p-4 flex items-center gap-3 group"
+          className="apple-card p-4 sm:p-5 flex flex-col justify-between relative overflow-hidden group transition-all"
         >
-          <div
-            className={`w-11 h-11 rounded-xl bg-gradient-to-br ${stat.color} 
-                        flex items-center justify-center text-lg flex-shrink-0
-                        group-hover:scale-110 transition-transform duration-300`}
-            style={{ boxShadow: `0 0 20px ${stat.glow}` }}
-          >
-            {stat.icon}
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-xs text-[var(--text-muted)] font-medium">
+              {stat.label}
+            </span>
+            <span 
+              className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold"
+              style={{ background: `${stat.accent}15`, color: stat.accent }}
+            >
+              {stat.icon}
+            </span>
           </div>
+
           <div>
-            <div className="text-lg font-bold text-[var(--text-primary)] font-mono">{stat.value}</div>
-            <div className="text-xs text-[var(--text-muted)]">{stat.label}</div>
+            <div className="text-xl sm:text-2xl font-bold font-mono tracking-tight text-[var(--text-primary)]">
+              {stat.value}
+            </div>
+            <div className="text-[11px] text-[var(--text-muted)] mt-1 flex items-center gap-1.5 truncate">
+              <span className="w-1.5 h-1.5 rounded-full" style={{ background: stat.accent }} />
+              <span>{stat.subtext}</span>
+            </div>
           </div>
         </div>
       ))}

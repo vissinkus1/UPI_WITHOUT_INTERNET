@@ -12,121 +12,140 @@ export default function MeshAnimation() {
     let time = 0;
 
     const nodes = [
-      { x: 0.15, y: 0.3, label: '📱', radius: 18, color: '#3b82f6' },
-      { x: 0.35, y: 0.15, label: '📱', radius: 14, color: '#8b5cf6' },
-      { x: 0.55, y: 0.4, label: '📱', radius: 16, color: '#6366f1' },
-      { x: 0.3, y: 0.65, label: '📱', radius: 14, color: '#a78bfa' },
-      { x: 0.7, y: 0.2, label: '📱', radius: 15, color: '#818cf8' },
-      { x: 0.8, y: 0.55, label: '📡', radius: 20, color: '#10b981' },
-      { x: 0.5, y: 0.75, label: '📱', radius: 13, color: '#7c3aed' },
-      { x: 0.9, y: 0.8, label: '🏦', radius: 22, color: '#06b6d4' },
+      { x: 0.10, y: 0.48, label: '📱', name: 'Alice (Basement)', radius: 22, color: '#2997ff' },
+      { x: 0.30, y: 0.24, label: '🚶', name: 'Stranger 1 (Stairs)', radius: 18, color: '#a1a1a6' },
+      { x: 0.50, y: 0.52, label: '🚶', name: 'Stranger 2 (Lobby)', radius: 18, color: '#a1a1a6' },
+      { x: 0.28, y: 0.76, label: '🚶', name: 'Stranger 3 (Parking)', radius: 18, color: '#a1a1a6' },
+      { x: 0.72, y: 0.38, label: '📡', name: 'Bridge Node (4G)', radius: 24, color: '#30d158' },
+      { x: 0.90, y: 0.64, label: '🏦', name: 'Banking Ledger', radius: 24, color: '#bf5af2' },
     ];
 
     const connections = [
-      [0, 1], [0, 3], [1, 2], [1, 4], [2, 4], [2, 5],
-      [3, 2], [3, 6], [4, 5], [5, 7], [6, 5],
+      [0, 1], [0, 3], [1, 2], [3, 2], [2, 4], [3, 4], [4, 5]
     ];
 
-    // Traveling packets
     const packets = [
-      { from: 0, to: 1, speed: 0.008, offset: 0 },
-      { from: 1, to: 2, speed: 0.006, offset: 0.3 },
-      { from: 2, to: 5, speed: 0.007, offset: 0.6 },
-      { from: 5, to: 7, speed: 0.009, offset: 0.1 },
-      { from: 3, to: 6, speed: 0.005, offset: 0.5 },
-      { from: 4, to: 5, speed: 0.007, offset: 0.8 },
+      { from: 0, to: 1, speed: 0.007, offset: 0, color: '#2997ff' },
+      { from: 1, to: 2, speed: 0.006, offset: 0.3, color: '#2997ff' },
+      { from: 2, to: 4, speed: 0.008, offset: 0.6, color: '#2997ff' },
+      { from: 4, to: 5, speed: 0.010, offset: 0.85, color: '#30d158' },
+      { from: 0, to: 3, speed: 0.005, offset: 0.5, color: '#2997ff' },
+      { from: 3, to: 4, speed: 0.007, offset: 0.15, color: '#2997ff' },
     ];
 
     function resize() {
+      if (!canvas.parentElement) return;
       const rect = canvas.parentElement.getBoundingClientRect();
-      canvas.width = rect.width * window.devicePixelRatio;
-      canvas.height = rect.height * window.devicePixelRatio;
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
       canvas.style.width = rect.width + 'px';
       canvas.style.height = rect.height + 'px';
-      ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
     }
 
-    function draw() {
-      const w = canvas.width / window.devicePixelRatio;
-      const h = canvas.height / window.devicePixelRatio;
+    resize();
+
+    function render() {
+      const dpr = window.devicePixelRatio || 1;
+      const w = canvas.width / dpr;
+      const h = canvas.height / dpr;
+
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.clearRect(0, 0, w, h);
       time += 0.01;
 
-      // Draw connections
+      // Draw connection lines
       connections.forEach(([a, b]) => {
         const na = nodes[a], nb = nodes[b];
+        const bobA = Math.sin(time * 1.2 + a) * 2;
+        const bobB = Math.sin(time * 1.2 + b) * 2;
+
         ctx.beginPath();
-        ctx.moveTo(na.x * w, na.y * h);
-        ctx.lineTo(nb.x * w, nb.y * h);
-        ctx.strokeStyle = 'rgba(148, 163, 184, 0.12)';
-        ctx.lineWidth = 1.5;
+        ctx.moveTo(na.x * w, na.y * h + bobA);
+        ctx.lineTo(nb.x * w, nb.y * h + bobB);
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.09)';
+        ctx.lineWidth = 1.4;
         ctx.stroke();
       });
 
-      // Draw traveling packets
+      // Draw traveling packet particles
       packets.forEach(p => {
         const progress = ((time * p.speed * 60 + p.offset) % 1);
         const na = nodes[p.from], nb = nodes[p.to];
-        const px = na.x + (nb.x - na.x) * progress;
-        const py = na.y + (nb.y - na.y) * progress;
-        const alpha = Math.sin(progress * Math.PI);
+        const bobA = Math.sin(time * 1.2 + p.from) * 2;
+        const bobB = Math.sin(time * 1.2 + p.to) * 2;
+
+        const curX = (na.x + (nb.x - na.x) * progress) * w;
+        const curY = (na.y * h + bobA) + ((nb.y * h + bobB) - (na.y * h + bobA)) * progress;
 
         ctx.beginPath();
-        ctx.arc(px * w, py * h, 4, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(59, 130, 246, ${alpha * 0.8})`;
+        ctx.arc(curX, curY, 4, 0, Math.PI * 2);
+        ctx.fillStyle = p.color;
+        ctx.shadowColor = p.color;
+        ctx.shadowBlur = 10;
         ctx.fill();
-
-        // Glow
-        ctx.beginPath();
-        ctx.arc(px * w, py * h, 10, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(59, 130, 246, ${alpha * 0.15})`;
-        ctx.fill();
+        ctx.shadowBlur = 0;
       });
 
       // Draw nodes
       nodes.forEach((node, i) => {
         const nx = node.x * w;
-        const ny = node.y * h;
-        const bobY = Math.sin(time * 2 + i * 0.8) * 3;
+        const bobY = Math.sin(time * 1.2 + i) * 2;
+        const ny = node.y * h + bobY;
 
-        // Outer glow
+        // Subtle outer glow
         ctx.beginPath();
-        ctx.arc(nx, ny + bobY, node.radius + 8, 0, Math.PI * 2);
-        ctx.fillStyle = node.color.replace(')', ', 0.08)').replace('rgb', 'rgba');
+        ctx.arc(nx, ny, node.radius + 10, 0, Math.PI * 2);
+        ctx.fillStyle = `${node.color}14`;
         ctx.fill();
 
         // Node circle
         ctx.beginPath();
-        ctx.arc(nx, ny + bobY, node.radius, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(17, 24, 39, 0.9)';
+        ctx.arc(nx, ny, node.radius, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(18, 22, 31, 0.94)';
         ctx.fill();
-        ctx.strokeStyle = node.color;
-        ctx.lineWidth = 2;
+        ctx.strokeStyle = `${node.color}77`;
+        ctx.lineWidth = 1.6;
         ctx.stroke();
 
         // Emoji
-        ctx.font = `${node.radius * 0.9}px serif`;
+        ctx.font = `${node.radius * 0.72}px -apple-system, sans-serif`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText(node.label, nx, ny + bobY);
+        ctx.fillText(node.label, nx, ny);
+
+        // Name label
+        ctx.font = '500 11px -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'top';
+        ctx.fillStyle = 'rgba(245, 245, 247, 0.85)';
+        ctx.fillText(node.name, nx, ny + node.radius + 8);
       });
 
-      animationId = requestAnimationFrame(draw);
+      animationId = requestAnimationFrame(render);
     }
 
-    resize();
-    draw();
-    window.addEventListener('resize', resize);
+    render();
+
+    const handleResize = () => resize();
+    window.addEventListener('resize', handleResize);
 
     return () => {
-      window.removeEventListener('resize', resize);
       cancelAnimationFrame(animationId);
+      window.removeEventListener('resize', handleResize);
     };
   }, []);
 
   return (
-    <div className="relative w-full h-full min-h-[350px]">
-      <canvas ref={canvasRef} className="w-full h-full" />
+    <div className="relative w-full h-[380px] sm:h-[440px] rounded-2xl bg-black/50 border border-white/[0.08] overflow-hidden select-none">
+      <canvas ref={canvasRef} className="w-full h-full block" />
+      <div className="absolute top-4 left-4 px-3.5 py-1.5 rounded-full bg-black/70 backdrop-blur-md border border-white/[0.1] text-xs font-mono text-[var(--text-secondary)] flex items-center gap-2">
+        <span className="w-2 h-2 rounded-full bg-[#30d158] animate-pulse"></span>
+        <span>Peer-to-Peer Bluetooth Simulation Active</span>
+      </div>
+      <div className="absolute bottom-4 right-4 px-3.5 py-1 rounded-full bg-black/60 backdrop-blur-md border border-white/[0.08] text-[11px] font-mono text-[var(--text-muted)] hidden sm:block">
+        Zero Cellular Data Required at Origin
+      </div>
     </div>
   );
 }

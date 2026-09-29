@@ -1,75 +1,101 @@
 'use client';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { getEngineStatus, onEngineStatusChange } from '@/lib/api';
 
 const NAV_ITEMS = [
-  { href: '/', label: 'Home', icon: '🏠' },
-  { href: '/dashboard', label: 'Dashboard', icon: '📊' },
-  { href: '/how-it-works', label: 'How It Works', icon: '🔬' },
-  { href: '/api-explorer', label: 'API Explorer', icon: '🔌' },
+  { href: '/', label: 'Overview' },
+  { href: '/dashboard', label: 'Interactive Console' },
+  { href: '/how-it-works', label: 'Architecture' },
+  { href: '/api-explorer', label: 'API Reference' },
 ];
 
 export default function Navbar() {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [engineStatus, setEngineStatus] = useState(getEngineStatus());
+
+  useEffect(() => {
+    return onEngineStatusChange((status) => {
+      setEngineStatus(status);
+    });
+  }, []);
+
+  const isLive = engineStatus.effectiveMode === 'live';
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 border-b border-[var(--border-subtle)]"
-         style={{ background: 'rgba(5, 8, 22, 0.85)', backdropFilter: 'blur(16px)' }}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6">
+    <nav 
+      className="fixed top-0 left-0 right-0 z-50 border-b border-white/[0.08]"
+      style={{ 
+        background: 'rgba(7, 8, 11, 0.85)', 
+        backdropFilter: 'blur(20px) saturate(180%)',
+        WebkitBackdropFilter: 'blur(20px) saturate(180%)'
+      }}
+    >
+      <div className="max-w-7xl mx-auto px-4 sm:px-8">
         <div className="flex items-center justify-between h-16">
-          {/* Logo */}
-          <Link href="/" className="flex items-center gap-3 group">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 
-                            flex items-center justify-center text-white font-bold text-sm
-                            shadow-[0_0_20px_rgba(59,130,246,0.3)]
-                            group-hover:shadow-[0_0_30px_rgba(59,130,246,0.5)]
-                            transition-all duration-300">
+          {/* Brand Logo */}
+          <Link href="/" className="flex items-center gap-3 group shrink-0">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#2997ff] to-[#5e5ce6] flex items-center justify-center text-white font-bold text-sm shadow-sm group-hover:scale-105 transition-transform">
               ₹
             </div>
-            <div className="hidden sm:block">
-              <span className="text-base font-bold text-[var(--text-primary)]">UPI Mesh</span>
-              <span className="text-xs text-[var(--text-muted)] block -mt-0.5">Offline Payments</span>
+            <div className="flex flex-col">
+              <span className="text-sm font-semibold tracking-tight text-[var(--text-primary)]">
+                UPI Mesh
+              </span>
+              <span className="text-[10px] text-[var(--text-muted)] tracking-wide font-mono">
+                Offline Routing
+              </span>
             </div>
           </Link>
 
-          {/* Desktop nav */}
-          <div className="hidden md:flex items-center gap-1">
-            {NAV_ITEMS.map(({ href, label, icon }) => {
+          {/* Center Navigation Links — Generous Spacing */}
+          <div className="hidden md:flex items-center gap-2">
+            {NAV_ITEMS.map(({ href, label }) => {
               const active = pathname === href;
               return (
                 <Link
                   key={href}
                   href={href}
                   className={`
-                    px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 flex items-center gap-2
+                    px-4 py-1.5 rounded-full text-xs font-medium transition-all duration-200
                     ${active
-                      ? 'bg-blue-500/15 text-blue-400 shadow-[0_0_20px_rgba(59,130,246,0.1)]'
-                      : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-elevated)]'
+                      ? 'bg-white/[0.12] text-white shadow-sm border border-white/[0.1]'
+                      : 'text-[var(--text-secondary)] hover:text-white hover:bg-white/[0.05]'
                     }
                   `}
                 >
-                  <span>{icon}</span>
                   {label}
                 </Link>
               );
             })}
           </div>
 
-          {/* Live indicator */}
-          <div className="hidden md:flex items-center gap-2 text-xs text-[var(--text-muted)]">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-            </span>
-            Backend Live
+          {/* Right Status & Launch Button */}
+          <div className="hidden md:flex items-center gap-4 shrink-0">
+            <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.03] border border-white/[0.06] text-xs font-mono">
+              <span className="relative flex h-2 w-2">
+                <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${isLive ? 'bg-[#30d158]' : 'bg-[#2997ff]'}`}></span>
+                <span className={`relative inline-flex rounded-full h-2 w-2 ${isLive ? 'bg-[#30d158]' : 'bg-[#2997ff]'}`}></span>
+              </span>
+              <span className="text-[var(--text-secondary)] text-[11px]">
+                {isLive ? 'Live Spring Boot' : 'Simulated Engine'}
+              </span>
+            </div>
+
+            <Link
+              href="/dashboard"
+              className="apple-button-primary text-xs py-2 px-4 font-medium"
+            >
+              Launch Console
+            </Link>
           </div>
 
           {/* Mobile hamburger */}
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
-            className="md:hidden p-2 rounded-lg hover:bg-[var(--bg-elevated)] text-[var(--text-secondary)]"
+            className="md:hidden p-2 rounded-xl text-[var(--text-secondary)] hover:text-white hover:bg-white/[0.06]"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               {mobileOpen ? (
@@ -83,8 +109,8 @@ export default function Navbar() {
 
         {/* Mobile menu */}
         {mobileOpen && (
-          <div className="md:hidden pb-4 animate-fade-in">
-            {NAV_ITEMS.map(({ href, label, icon }) => {
+          <div className="md:hidden py-4 border-t border-white/[0.06] space-y-1.5 animate-fade-in">
+            {NAV_ITEMS.map(({ href, label }) => {
               const active = pathname === href;
               return (
                 <Link
@@ -92,14 +118,13 @@ export default function Navbar() {
                   href={href}
                   onClick={() => setMobileOpen(false)}
                   className={`
-                    block px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200
+                    block px-4 py-2.5 rounded-xl text-xs font-medium transition-all
                     ${active
-                      ? 'bg-blue-500/15 text-blue-400'
-                      : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-elevated)]'
+                      ? 'bg-white/[0.1] text-white font-semibold'
+                      : 'text-[var(--text-secondary)] hover:text-white hover:bg-white/[0.04]'
                     }
                   `}
                 >
-                  <span className="mr-2">{icon}</span>
                   {label}
                 </Link>
               );

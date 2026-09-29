@@ -1,16 +1,16 @@
 export default function Card({ children, className = '', glow, hover = true, ...props }) {
   const glowStyles = {
-    blue: 'hover:shadow-[0_0_30px_rgba(59,130,246,0.15)]',
-    emerald: 'hover:shadow-[0_0_30px_rgba(16,185,129,0.15)]',
-    purple: 'hover:shadow-[0_0_30px_rgba(139,92,246,0.15)]',
-    amber: 'hover:shadow-[0_0_30px_rgba(245,158,11,0.15)]',
+    blue: 'hover:border-[rgba(41,151,255,0.4)] hover:shadow-[0_0_24px_rgba(41,151,255,0.12)]',
+    emerald: 'hover:border-[rgba(48,209,88,0.4)] hover:shadow-[0_0_24px_rgba(48,209,88,0.12)]',
+    purple: 'hover:border-[rgba(191,90,242,0.4)] hover:shadow-[0_0_24px_rgba(191,90,242,0.12)]',
+    amber: 'hover:border-[rgba(255,159,10,0.4)] hover:shadow-[0_0_24px_rgba(255,159,10,0.12)]',
   };
 
   return (
     <div
       className={`
-        glass-card p-5
-        ${hover ? 'hover:border-[var(--border-strong)]' : ''}
+        apple-card p-5 sm:p-6
+        ${hover ? 'hover:border-[var(--border-medium)]' : ''}
         ${glow ? glowStyles[glow] : ''}
         ${className}
       `}
@@ -24,8 +24,8 @@ export default function Card({ children, className = '', glow, hover = true, ...
 export function CardHeader({ children, icon, action, className = '' }) {
   return (
     <div className={`flex items-center justify-between mb-4 ${className}`}>
-      <h3 className="text-base font-semibold text-[var(--text-primary)] flex items-center gap-2">
-        {icon && <span className="text-lg">{icon}</span>}
+      <h3 className="text-sm font-semibold tracking-tight text-[var(--text-primary)] flex items-center gap-2">
+        {icon && <span className="text-base leading-none">{icon}</span>}
         {children}
       </h3>
       {action && <div>{action}</div>}
